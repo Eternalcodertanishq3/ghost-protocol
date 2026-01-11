@@ -24,7 +24,7 @@ This is a true **Federated Learning (FL)** system designed for the hostile reali
 We rely on **Paillier Encryption** (via `phe` library) to encrypt model gradients.
 *   The "Secure National Aggregator" performs **Homomorphic Addition** on encrypted ciphertexts.
 *   The server *never* sees the raw updates, only the mathematical sum.
-*   *Proof:* Check `demo_cinematic.py` for the implementation.
+*   *Proof:* Check `run_secure_protocol.py` for the implementation.
 
 ### 2. 🧠 Differential Privacy (Opacus)
 We don't just "hope" for privacy; we calculate it.
