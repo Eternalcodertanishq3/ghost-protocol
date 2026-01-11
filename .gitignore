@@ -1,0 +1,31 @@
+# Data & Models
+patient_data.csv
+data/*.csv
+checkpoints/
+*.pt
+*.pth
+
+# Environment & Secrets
+.env
+.env.local
+config.yaml
+keys/
+*.pem
+*.key
+
+# Python
+__pycache__/
+*.py[cod]
+venv/
+.pytest_cache/
+
+# Frontend
+frontend/node_modules/
+frontend/build/
+frontend/.env
+
+# IDE / System
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

@@ -1,0 +1,139 @@
+// Ghost Protocol - gRPC Service Definition
+// Secure National Aggregator (SNA) <-> Ghost Agent communication
+
+syntax = "proto3";
+
+package ghost;
+
+option java_multiple_files = true;
+option java_package = "io.ghost.protocol";
+
+// Ghost Agent -> SNA Service
+service SNAService {
+    // Health check
+    rpc HealthCheck(HealthCheckRequest) returns (HealthCheckResponse);
+    
+    // Get current global model
+    rpc GetGlobalModel(GlobalModelRequest) returns (GlobalModelResponse);
+    
+    // Submit Ghost Pack (model update)
+    rpc SubmitUpdate(GhostPackRequest) returns (GhostPackResponse);
+    
+    // Get HealthToken balance
+    rpc GetTokenBalance(TokenBalanceRequest) returns (TokenBalanceResponse);
+    
+    // Get reputation status
+    rpc GetReputationStatus(ReputationRequest) returns (ReputationResponse);
+    
+    // Stream training events
+    rpc StreamTrainingEvents(StreamEventsRequest) returns (stream TrainingEvent);
+}
+
+// Health check messages
+message HealthCheckRequest {
+    string hospital_id = 1;
+    int64 timestamp = 2;
+}
+
+message HealthCheckResponse {
+    bool healthy = 1;
+    string status = 2;
+    int32 current_round = 3;
+    int32 registered_hospitals = 4;
+    string aggregation_strategy = 5;
+}
+
+// Global model messages
+message GlobalModelRequest {
+    string hospital_id = 1;
+    int32 round_id = 2;
+}
+
+message GlobalModelResponse {
+    int32 round_id = 1;
+    bytes model_state = 2;  // Serialized PyTorch state dict
+    string model_hash = 3;
+    double current_auc = 4;
+    int64 timestamp = 5;
+}
+
+// Ghost Pack submission
+message GhostPackRequest {
+    string hospital_id = 1;
+    int32 round_id = 2;
+    string encrypted_ghost_pack = 3;  // AES-256-GCM encrypted
+    string signature = 4;  // ECDSA P-256 signature
+    string public_key = 5;  // Hospital's public key
+}
+
+message GhostPackResponse {
+    bool accepted = 1;
+    string rejection_reason = 2;
+    double anomaly_score = 3;
+    double reputation_change = 4;
+    int32 tokens_awarded = 5;
+    int64 next_round_start = 6;
+}
+
+// Token balance messages
+message TokenBalanceRequest {
+    string hospital_id = 1;
+}
+
+message TokenBalanceResponse {
+    string hospital_id = 1;
+    int64 total_tokens = 2;
+    int64 staked_tokens = 3;
+    int64 available_tokens = 4;
+    repeated TokenTransaction recent_transactions = 5;
+}
+
+message TokenTransaction {
+    string transaction_id = 1;
+    int32 amount = 2;
+    string reason = 3;
+    int64 timestamp = 4;
+}
+
+// Reputation messages
+message ReputationRequest {
+    string hospital_id = 1;
+}
+
+message ReputationResponse {
+    string hospital_id = 1;
+    double reputation_score = 2;
+    int32 total_updates = 3;
+    int32 accepted_updates = 4;
+    int32 rejected_updates = 5;
+    bool quarantined = 6;
+    string reputation_tier = 7;  // PLATINUM, GOLD, SILVER, BRONZE
+}
+
+// Training event streaming
+message StreamEventsRequest {
+    string hospital_id = 1;
+}
+
+message TrainingEvent {
+    string event_type = 1;  // ROUND_START, ROUND_END, ATTACK_DETECTED, TOKEN_AWARD
+    int32 round_id = 2;
+    string message = 3;
+    map<string, string> metadata = 4;
+    int64 timestamp = 5;
+}
+
+// Metadata structures
+message DPCompliance {
+    double epsilon_spent = 1;
+    double epsilon_remaining = 2;
+    double delta = 3;
+    bool budget_exhausted = 4;
+}
+
+message ByzantineMetadata {
+    double anomaly_score = 1;
+    double gradient_norm = 2;
+    double local_auc = 3;
+    string aggregation_strategy = 4;
+}
