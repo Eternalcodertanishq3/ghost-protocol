@@ -63,27 +63,56 @@ python demo_cinematic.py
 ## 🏗️ Architecture
 
 ```mermaid
-graph TD
-    User[Start Training] -->|Init| SNA[Secure National Aggregator]
-    SNA -->|Broadcast Model| H1[Hospital Node A]
-    SNA -->|Broadcast Model| H2[Hospital Node B]
+flowchart TD
+    %% Nodes
+    User([🚀 Start Training])
     
-    subgraph "Secure Hospital Silo A"
-    D1[(Patient Data)] -->|Train| H1
-    H1 -->|Add Noise - DP| H1
-    H1 -->|Encrypt - HE| H1
+    subgraph Cloud ["☁️ Untrusted Information Exchange (The Internet)"]
+        SNA["🏢 Secure National Aggregator <br/> (Violates Privacy if Data leaks)"]
+        GlobalModel{"🧠 Global Model State"}
     end
 
-    subgraph "Secure Hospital Silo B"
-    D2[(Patient Data)] -->|Train| H2
-    H2 -->|Add Noise - DP| H2
-    H2 -->|Encrypt - HE| H2
+    subgraph HospitalA ["🏥 Appollo Hospital (Secure Enclave)"]
+        DataA[("📂 Patient Data <br/> (Never Leaves)")]
+        LocalModelA["⚙️ Local Model"]
+        NoiseA["🎲 Opacus Engine <br/> (Differential Privacy)"]
+        EncryptA["🔒 Paillier Encryption <br/> (Homomorphic)"]
     end
 
-    H1 -->|Encrypted Update| SNA
-    H2 -->|Encrypted Update| SNA
+    subgraph HospitalB ["🏥 AIIMS Hospital (Secure Enclave)"]
+        DataB[("📂 Patient Data <br/> (Never Leaves)")]
+        LocalModelB["⚙️ Local Model"]
+        NoiseB["🎲 Opacus Engine <br/>(Differential Privacy)"]
+        EncryptB["🔒 Paillier Encryption <br/> (Homomorphic)"]
+    end
+
+    %% Logic Flow
+    User -->|1. Initialize| SNA
+    SNA -->|2. Broadcast Logic| LocalModelA
+    SNA -->|2. Broadcast Logic| LocalModelB
+
+    DataA -->|3. Train| LocalModelA
+    LocalModelA -->|4. Add Noise| NoiseA
+    NoiseA -->|5. Encrypt Weights| EncryptA
     
-    SNA -->|Homomorphic Aggregation| Global[New Global Model]
+    DataB -->|3. Train| LocalModelB
+    LocalModelB -->|4. Add Noise| NoiseB
+    NoiseB -->|5. Encrypt Weights| EncryptB
+
+    EncryptA -->|6. Send Ciphertext| SNA
+    EncryptB -->|6. Send Ciphertext| SNA
+
+    SNA -->|7. Blind Aggregation| GlobalModel
+    GlobalModel -.->|8. Distribute New Intelligence| LocalModelA
+    GlobalModel -.->|8. Distribute New Intelligence| LocalModelB
+    
+    %% Styling
+    style Cloud fill:#f9f9f9,stroke:#333,stroke-width:2px,stroke-dasharray: 5 5
+    style HospitalA fill:#e1f5fe,stroke:#01579b
+    style HospitalB fill:#e1f5fe,stroke:#01579b
+    style SNA fill:#ffcdd2,stroke:#b71c1c
+    style DataA fill:#fff9c4,stroke:#fbc02d
+    style DataB fill:#fff9c4,stroke:#fbc02d
 ```
 
 
