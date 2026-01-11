@@ -54,7 +54,7 @@ pip install -r requirements.txt
 ### 2. Run the "Real Math" Demo
 Witness the full cryptographic cycle (Encryption -> Aggregation -> Decryption) on your local machine.
 ```bash
-python demo_cinematic.py
+python run_secure_protocol.py
 ```
 *warning: This script performs real 1024-bit encryption. It is computationally intensive.*
 
@@ -121,7 +121,7 @@ flowchart TD
 
 We believe in **"Security through Visibility"**, not obscurity.
 *   **Found a bug?** Please open an Issue. We treat security reports with highest priority.
-*   **Want to break it?** We invite cryptographers and engineers to audit the `demo_cinematic.py` implementation.
+*   **Want to break it?** We invite cryptographers and engineers to audit the `run_secure_protocol.py` implementation.
 *   **Pull Requests:** Welcome! Help us optimize the Paillier encryption steps or different model architectures.
 
 We are building this *with* the community, not just *for* it.
