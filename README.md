@@ -116,7 +116,7 @@ flowchart TD
 ```
 
 
-## 🤝 Contributing & Security (The "Hybrid" Approach)
+## 🤝 Contributing & Security
 **Privacy is a moving target.** While we rely on mathematically proven libraries (`opacus`, `phe`), implementation bugs are always possible.
 
 We believe in **"Security through Visibility"**, not obscurity.
