@@ -70,14 +70,14 @@ graph TD
     
     subgraph "Secure Hospital Silo A"
     D1[(Patient Data)] -->|Train| H1
-    H1 -->|Add Noise (DP)| H1
-    H1 -->|Encrypt (HE)| H1
+    H1 -->|Add Noise - DP| H1
+    H1 -->|Encrypt - HE| H1
     end
 
     subgraph "Secure Hospital Silo B"
     D2[(Patient Data)] -->|Train| H2
-    H2 -->|Add Noise (DP)| H2
-    H2 -->|Encrypt (HE)| H2
+    H2 -->|Add Noise - DP| H2
+    H2 -->|Encrypt - HE| H2
     end
 
     H1 -->|Encrypted Update| SNA
