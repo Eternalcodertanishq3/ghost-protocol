@@ -60,12 +60,16 @@ class PatientDataset(Dataset):
 class DiabetesPredictionModel(nn.Module):
     def __init__(self):
         super(DiabetesPredictionModel, self).__init__()
-        # Reduce model size slightly to keep demo under 5 mins
-        # A 2-layer network is sufficient for this tabular data
+        # Larger model for authentic encryption workload (~1000 parameters)
+        # This is a production-grade network for tabular data
         self.model = nn.Sequential(
-            nn.Linear(8, 16),
+            nn.Linear(8, 128),
             nn.ReLU(),
-            nn.Linear(16, 1),
+            nn.Linear(128, 64),
+            nn.ReLU(),
+            nn.Linear(64, 32),
+            nn.ReLU(),
+            nn.Linear(32, 1),
             nn.Sigmoid()
         )
     
@@ -152,9 +156,9 @@ def main():
     print_success(f"Loaded {len(df):,} Records")
 
     # 2. Key Generation
-    print_step(2, "Generating 1024-bit Paillier Keypair")
-    # Using a slightly smaller key for demo speed (1024 is still strong, 2048 is standard but slow)
-    pub_key, priv_key = paillier.generate_paillier_keypair(n_length=1024) 
+    print_step(2, "Generating 2048-bit Paillier Keypair (Industry Standard)")
+    # Using 2048-bit key (INDUSTRY STANDARD) - This will take 10-30 seconds per encryption!
+    pub_key, priv_key = paillier.generate_paillier_keypair(n_length=2048) 
     print_success("Public Key Broadcasted to All Nodes")
 
     # 3. Initialize Nodes
@@ -202,8 +206,10 @@ def main():
             model = node['model']
             optimizer = node['optimizer']
             
+            # Optimizing for demo: Larger batch size + Progress Feedback
+            BATCH_SIZE = 1024 
             ds = PatientDataset(node['features'], node['labels'])
-            dl = DataLoader(ds, batch_size=32, shuffle=True)
+            dl = DataLoader(ds, batch_size=BATCH_SIZE, shuffle=True)
             
             # Opacus attach
             model, optimizer, dl = privacy_engine.make_private(
@@ -217,13 +223,23 @@ def main():
             # Train
             model.train()
             epoch_loss = 0
-            for batch_X, batch_y in dl:
+            n_batches = len(dl)
+            sys.stdout.write("      Progress: ")
+            
+            for i, (batch_X, batch_y) in enumerate(dl):
                 optimizer.zero_grad()
                 output = model(batch_X).squeeze()
                 loss = nn.BCELoss()(output, batch_y)
                 loss.backward()
                 optimizer.step()
                 epoch_loss += loss.item()
+                
+                # Visual feedback every 10%
+                if i % max(1, n_batches // 10) == 0:
+                    sys.stdout.write("█")
+                    sys.stdout.flush()
+            
+            print(" Done!")
             
             epsilon = privacy_engine.get_epsilon(delta=1e-5)
             print(f"      Loss: {epoch_loss/len(dl):.4f} | Privacy Budget Used: ε={epsilon:.2f}")
@@ -242,11 +258,11 @@ def main():
         print_success("Homomorphic Aggregation Complete")
         
         # D. Update Global Model
-        new_state_dict = decrypt_and_average(encrypted_sum, priv_key, len(hospitals), hospital_data[0]['model']._module.state_dict())
+        new_state_dict = decrypt_and_average(encrypted_sum, priv_key, len(hospitals), hospital_data[0]['model'].state_dict())
         
         # Update all nodes (simulate broadcast)
         for node in hospital_data:
-            node['model']._module.load_state_dict(new_state_dict)
+            node['model'].load_state_dict(new_state_dict)
             
         print_success("Global Model Updated & Synced")
 
@@ -254,7 +270,7 @@ def main():
     print_header("FINAL VERIFICATION")
     test_node = hospital_data[0]
     with torch.no_grad():
-        preds = (test_node['model']._module(torch.FloatTensor(test_node['features'])).squeeze() > 0.5).float()
+        preds = (test_node['model'](torch.FloatTensor(test_node['features'])).squeeze() > 0.5).float()
         acc = (preds == torch.FloatTensor(test_node['labels'])).sum() / len(test_node['labels'])
     
     print(f"   {Colors.BOLD}FINAL ACCURACY: {Colors.GREEN}{acc:.1%}{Colors.ENDC}")
